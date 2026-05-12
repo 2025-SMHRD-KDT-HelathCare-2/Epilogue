@@ -1,0 +1,15 @@
+streamlit
+ultralytics
+easyocr
+google-generativeai
+langchain
+langchain-google-genai
+chromadb
+opencv-python
+Pillow
+pandas
+numpy
+matplotlib
+seaborn
+python-dotenv
+pydantic
