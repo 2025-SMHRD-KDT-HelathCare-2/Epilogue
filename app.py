@@ -5,7 +5,6 @@ Streamlit 메인 페이지
 
 [Streamlit이란?]
 파이썬 코드만으로 웹 앱을 만들 수 있는 프레임워크.
-HTML/CSS/JavaScript 몰라도 OK!
 
 [기본 구조]
 - st.title(): 큰 제목
