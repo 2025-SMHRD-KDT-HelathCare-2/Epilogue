@@ -5,6 +5,7 @@
 import streamlit as st
 import sys
 import os
+import re
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -14,6 +15,48 @@ from modules.chatbot_module import GriefChatbot
 st.set_page_config(page_title="통합 체크리스트", page_icon="📋", layout="wide")
 st.title("📋 통합 체크리스트 & 비탄 케어")
 
+# =========================================================
+# 📌 가독성 향상용 CSS (글씨 크기 ↑, 줄간격 ↑)
+# =========================================================
+st.markdown("""
+<style>
+/* 체크리스트 가이드 박스 */
+.guide-box {
+    font-size: 17px;
+    line-height: 1.9;
+    color: #2c2c2c;
+    padding: 12px 16px;
+    background-color: #fafafa;
+    border-left: 4px solid #4CAF50;
+    border-radius: 6px;
+    margin-top: 8px;
+    word-break: keep-all;   /* 한글 단어 단위 줄바꿈 */
+}
+.guide-box p {
+    margin: 0 0 10px 0;
+}
+.guide-box ul {
+    margin: 6px 0 10px 20px;
+    padding-left: 0;
+}
+.guide-box li {
+    margin-bottom: 6px;
+}
+/* 감지된 항목 라벨 */
+.detected-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f6feb;
+    margin-bottom: 4px;
+}
+.detected-item {
+    font-size: 15.5px;
+    line-height: 1.8;
+    margin-left: 10px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 @st.cache_resource
 def load_chatbot():
@@ -21,6 +64,53 @@ def load_chatbot():
 
 
 bot = load_chatbot()
+
+
+# =========================================================
+# 📌 가이드 텍스트를 읽기 좋게 정렬하는 헬퍼
+# =========================================================
+def format_guide_text(text: str) -> str:
+    """
+    LLM이 반환한 가이드 텍스트를 가독성 있는 HTML로 변환.
+    - 문장 종결부(. ! ?) 뒤에서 줄바꿈
+    - '-', '·', 숫자.' 으로 시작하는 항목은 리스트로 변환
+    - 빈 줄 기준 문단 분리
+    """
+    if not text:
+        return ""
+
+    # 1) 줄 단위로 분리해서 리스트 항목 / 일반 문장 처리
+    lines = [ln.strip() for ln in text.split("\n")]
+    html_parts = []
+    in_ul = False
+
+    for line in lines:
+        if not line:
+            if in_ul:
+                html_parts.append("</ul>")
+                in_ul = False
+            continue
+
+        # 리스트 항목 감지
+        if re.match(r"^([-•·\*]|\d+[.)])\s+", line):
+            if not in_ul:
+                html_parts.append("<ul>")
+                in_ul = True
+            item_text = re.sub(r"^([-•·\*]|\d+[.)])\s+", "", line)
+            html_parts.append(f"<li>{item_text}</li>")
+        else:
+            if in_ul:
+                html_parts.append("</ul>")
+                in_ul = False
+            # 문장 종결부 뒤에 <br> 삽입 (단, 숫자 사이의 점은 제외)
+            sentence_split = re.sub(r"(?<=[.!?。])\s+(?=[가-힣A-Z])", "<br>", line)
+            html_parts.append(f"<p>{sentence_split}</p>")
+
+    if in_ul:
+        html_parts.append("</ul>")
+
+    return f'<div class="guide-box">{"".join(html_parts)}</div>'
+
 
 # 탭으로 두 기능 분리
 tab1, tab2 = st.tabs(["📋 통합 체크리스트", "💬 비탄 케어 챗봇"])
@@ -31,7 +121,6 @@ tab1, tab2 = st.tabs(["📋 통합 체크리스트", "💬 비탄 케어 챗봇"
 with tab1:
     st.subheader("CV·LLM 분석 결과를 기반으로 유족 안내 체크리스트를 생성합니다.")
 
-    # 이전 페이지에서 저장된 결과 확인
     cv_result = st.session_state.get("cv_result")
     llm_result = st.session_state.get("last_report")
 
@@ -51,50 +140,63 @@ with tab1:
         if not cv_result and not llm_result:
             st.error("CV 또는 LLM 분석 결과가 필요합니다.")
         else:
-            with st.spinner("맞춤형 체크리스트 생성 중... (10~20초)"):
+            with st.spinner("맞춤형 체크리스트 생성 중... (30~40초)"):
                 result = generate_action_list(
                     cv_result or {"items": []},
                     llm_result or {}
                 )
+            st.session_state["checklist_result"] = result  # 재실행 대비 저장
 
-            if "error" in result:
-                st.error(f"❌ 생성 실패: {result['error']}")
-            else:
-                st.success("✅ 체크리스트 생성 완료!")
-                st.markdown("---")
-                st.markdown("### ✅ 유족 안내 체크리스트")
+    # 저장된 결과가 있으면 항상 표시 (expander 토글로 사라지지 않도록)
+    result = st.session_state.get("checklist_result")
+    if result:
+        if "error" in result:
+            st.error(f"❌ 생성 실패: {result['error']}")
+        else:
+            st.success("✅ 체크리스트 생성 완료!")
+            st.markdown("---")
+            st.markdown("### ✅ 유족 안내 체크리스트")
 
-                # 카테고리별 아이콘
-                icons = {
-                    "사망신고":  "📝",
-                    "안심상속":  "🏦",
-                    "귀중품":    "💍",
-                    "서류":      "📄",
-                    "추억물품":  "💝",
-                    "가전":      "🔌",
-                    "폐기물":    "🗑️",
-                    "보험":      "🏥",
-                    "구독":      "📺",
-                    "계정":      "👤",
-                }
+            icons = {
+                "사망신고":  "📝",
+                "안심상속":  "🏦",
+                "귀중품":    "💍",
+                "서류":      "📄",
+                "추억물품":  "💝",
+                "가전":      "🔌",
+                "폐기물":    "🗑️",
+                "보험":      "🏥",
+                "구독":      "📺",
+                "계정":      "👤",
+            }
 
-                for category, data in result.items():
-                    icon = icons.get(category, "✔️")
-                    with st.expander(f"{icon} {category}", expanded=True):
-                        if data["items"]:
-                            st.markdown("**[감지된 항목]**")
-                            for item in data["items"]:
-                                st.write(f"- {item}")
-                            st.markdown("---")
-                        st.markdown(data["guide"])
+            for category, data in result.items():
+                icon = icons.get(category, "✔️")
+                with st.expander(f"{icon}  {category}", expanded=True):
+                    if data["items"]:
+                        st.markdown(
+                            '<div class="detected-label">📌 감지된 항목</div>',
+                            unsafe_allow_html=True,
+                        )
+                        items_html = "".join(
+                            [f'<div class="detected-item">• {item}</div>'
+                             for item in data["items"]]
+                        )
+                        st.markdown(items_html, unsafe_allow_html=True)
+                        st.markdown("")  # 살짝 간격
+
+                    # 🔥 핵심: 포맷팅된 가이드 출력
+                    st.markdown(
+                        format_guide_text(data["guide"]),
+                        unsafe_allow_html=True,
+                    )
 
 # =========================================================
-# 탭 2: 비탄 케어 챗봇
+# 탭 2: 비탄 케어 챗봇 (변경 없음)
 # =========================================================
 with tab2:
     st.subheader("💬 마음을 나눠주세요. 함께 들어드릴게요.")
 
-    # 안전 안내
     with st.expander("🆘 위기 시 즉시 연락처"):
         st.markdown("""
         - 자살예방상담전화: **1393** (24시간)
@@ -103,45 +205,37 @@ with tab2:
         - 국가트라우마센터: **02-2204-0001**
         """)
 
-    # 채팅 기록 초기화
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
         st.session_state.chat_display = [
             {"role": "assistant", "content": "안녕하세요. 힘드신 마음이 있으시면 편히 이야기해주세요."}
         ]
 
-    # 채팅 기록 표시
     for msg in st.session_state.chat_display:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
 
-    # 사용자 입력
     if user_input := st.chat_input("당신의 마음을 적어주세요..."):
-        # 사용자 메시지 표시
         st.session_state.chat_display.append(
             {"role": "user", "content": user_input}
         )
         with st.chat_message("user"):
             st.write(user_input)
 
-        # AI 응답 생성
         with st.chat_message("assistant"):
             with st.spinner("..."):
                 response = bot.chat(user_input, history=st.session_state.chat_history)
 
             st.write(response["text"])
 
-            # 위기 감지 시 경고
             if response["is_crisis"]:
                 st.error("⚠️ 위기 상황이 감지되었습니다. 위 전문기관에 꼭 연락해 주세요.")
 
-        # 대화 기록 업데이트
         st.session_state.chat_history = response["history"]
         st.session_state.chat_display.append(
             {"role": "assistant", "content": response["text"]}
         )
 
-    # 대화 초기화 버튼
     if st.session_state.chat_display and len(st.session_state.chat_display) > 1:
         if st.button("🔄 대화 다시 시작"):
             st.session_state.chat_history = []
