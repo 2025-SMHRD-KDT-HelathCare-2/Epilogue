@@ -77,9 +77,10 @@ def extract_section(guide_text: str, section_name: str) -> str:
     return ""
 
 
-def extract_sections_for_category(category: str, guides: dict) -> str:
+def extract_sections_for_category(category: str, guides: dict, items: list = None) -> str:
     """
     카테고리에 해당하는 가이드 섹션만 추출하여 반환.
+    구독 카테고리는 인식된 서비스명에 해당하는 섹션만 동적으로 추출.
 
     Parameters
     ----------
@@ -87,17 +88,45 @@ def extract_sections_for_category(category: str, guides: dict) -> str:
         체크리스트 카테고리명
     guides : dict
         load_all_guides() 결과
+    items : list
+        인식된 항목 목록 (구독 카테고리에서 서비스명 매칭에 사용)
 
     Returns
     -------
     str
         해당 섹션 가이드 텍스트
     """
+    if items is None:
+        items = []
+
     disposal    = guides.get("disposal", "")
     account     = guides.get("account", "")
     inheritance = guides.get("inheritance", "")
 
-    # 카테고리 → 가이드 파일 섹션명 매핑
+    # ── 구독: 인식된 서비스명 기준으로 동적 추출 ──
+    # 서비스명 키워드 → account_guide.txt 섹션명 매핑
+    SUBSCRIPTION_SECTION_MAP = {
+        "netflix":  "Netflix 계정 해지",
+        "넷플릭스":  "Netflix 계정 해지",
+        "youtube":  "YouTube Premium 해지",
+        "유튜브":    "YouTube Premium 해지",
+        "멜론":     "멜론 계정 및 구독 해지",
+        "쿠팡":     "쿠팡 와우 해지",
+    }
+
+    if category == "구독":
+        extracted = []
+        for item in items:
+            item_lower = item.lower()
+            for keyword, section_name in SUBSCRIPTION_SECTION_MAP.items():
+                if keyword in item_lower:
+                    text = extract_section(account, section_name)
+                    if text and text not in extracted:
+                        extracted.append(text)
+                    break
+        return "\n\n".join(extracted)
+
+    # ── 나머지 카테고리: 고정 섹션 매핑 ──────────
     CATEGORY_SECTION_MAP = {
         "사망신고":  [(inheritance, "사망 신고 절차")],
         "안심상속":  [(inheritance, "안심 상속 원스톱서비스 조회"),
@@ -108,10 +137,6 @@ def extract_sections_for_category(category: str, guides: dict) -> str:
         "폐기물":    [(disposal, "폐기물")],
         "서류":      [(disposal, "서류")],
         "보험":      [(inheritance, "금융 자산 및 보험 정리")],
-        "구독":      [(account, "쿠팡 와우 해지"),
-                     (account, "Netflix 계정 해지"),
-                     (account, "YouTube Premium 해지"),
-                     (account, "멜론 계정 및 구독 해지")],
         "계정":      [(account, "Google 계정 정리"),
                      (account, "카카오톡 계정 정리"),
                      (account, "네이버 계정 정리")],
@@ -240,6 +265,7 @@ def classify_digital_assets(llm_result: dict) -> dict:
             result["구독"] = items
 
     # ── 계정 ─────────────────────────────────────
+    # LLM이 계정 분석 결과를 넘겨줄 경우 대비
     account = llm_result.get("account", {})
     acc_list = account.get("계정_목록", [])
     if acc_list:
@@ -273,25 +299,25 @@ def build_context_for_gemini(
     """
     context = {}
 
-    # 항상 포함
+    # 항상 포함: 사망신고 · 안심상속
     for cat in ["사망신고", "안심상속"]:
         context[cat] = {
             "items": [],
             "raw_guide": extract_sections_for_category(cat, guides)
         }
 
-    # 물리적 유품
+    # 물리적 유품 (CV 결과)
     for cat, items in physical_classified.items():
         context[cat] = {
             "items": items,
             "raw_guide": extract_sections_for_category(cat, guides)
         }
 
-    # 디지털 자산
+    # 디지털 자산 (LLM 결과) — 구독은 items 넘겨서 해당 서비스만 추출
     for cat, items in digital_classified.items():
         context[cat] = {
             "items": items,
-            "raw_guide": extract_sections_for_category(cat, guides)
+            "raw_guide": extract_sections_for_category(cat, guides, items)
         }
 
     return context
