@@ -23,7 +23,7 @@ st.markdown("유품 이미지를 업로드하면 AI가 자동으로 분류하고
 # =========================================================
 # 모델 로딩 (캐싱: 한 번만 로드해서 재사용)
 # =========================================================
-""" 
+'''
 @st.cache_resource  # 이 데코레이터가 핵심!
 def load_models():
 
@@ -40,20 +40,21 @@ def load_models():
 with st.spinner("AI 모델 로딩 중..."):
     detector, ocr = load_models()
 
-st.success("✅ 모델 준비 완료") """
+st.success("✅ 모델 준비 완료") 
+'''
 
 # =========================================================
 # 이미지 업로드
 # =========================================================
 st.markdown("---")
 st.subheader("1️⃣ 유품 이미지 업로드")
-""" 
+
+'''
 uploaded_file = st.file_uploader(
     "이미지 파일을 선택하세요 (jpg, png)",
     type=["jpg", "jpeg", "png"]
 )
- """
-""" 
+
 if uploaded_file is not None:
     # 임시 저장
     temp_path = f"data/samples/{uploaded_file.name}"
@@ -112,4 +113,5 @@ if uploaded_file is not None:
 # 안내
 else:
     st.info("👆 위에서 이미지를 업로드하세요.")
-"""
+
+'''

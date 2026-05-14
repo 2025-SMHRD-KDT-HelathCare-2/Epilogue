@@ -8,12 +8,12 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-#from modules.llm_module import GeminiAnalyzer, ChecklistGenerator
+# from modules.llm_module import GeminiAnalyzer, ChecklistGenerator
 
 st.set_page_config(page_title="통합 체크리스트", page_icon="📋", layout="wide")
 st.title("📋 통합 체크리스트 & 비탄 케어")
 
-""" 
+'''
 @st.cache_resource
 def load_models():
     gemini = GeminiAnalyzer()
@@ -21,14 +21,15 @@ def load_models():
     return gemini, checklist
 
 gemini, checklist_gen = load_models()
-"""
+'''
 
 # 탭으로 두 기능 분리
-tab1, tab2 = st.tabs(["📋 행정 체크리스트", "💬 비탄 케어 챗봇"])
+# tab1, tab2 = st.tabs(["📋 행정 체크리스트", "💬 비탄 케어 챗봇"])
 
 # =========================================================
 # 탭 1: 행정 체크리스트
 # =========================================================
+'''
 with tab1:
     st.subheader("유족 상황을 입력하시면 맞춤형 체크리스트를 생성합니다.")
     
@@ -62,15 +63,17 @@ with tab1:
             "만성질환": has_chronic_illness
         }
         
-        """ with st.spinner("맞춤형 체크리스트 생성 중..."):
-            result = checklist_gen.generate(situation) """
+        with st.spinner("맞춤형 체크리스트 생성 중..."):
+            result = checklist_gen.generate(situation)
         
         st.markdown("### ✅ 행정 체크리스트")
         # st.markdown(result)
+'''
 
 # =========================================================
 # 탭 2: 비탄 케어 챗봇
 # =========================================================
+'''
 with tab2:
     st.subheader("💬 마음을 나눠주세요. 함께 들어드릴게요.")
     
@@ -105,11 +108,12 @@ with tab2:
         
         
         # AI 응답 생성
-        """ with st.chat_message("assistant"):
+         with st.chat_message("assistant"):
             with st.spinner("..."):
                 response = gemini.generate_grief_care_response(user_input)
-            st.write(response) """
-        """ 
+            st.write(response) 
+         
         st.session_state.chat_messages.append(
             {"role": "assistant", "content": response}
-        ) """
+        )
+'''
