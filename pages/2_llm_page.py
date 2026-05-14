@@ -16,7 +16,6 @@ st.set_page_config(page_title="디지털 자산 보고서", page_icon="💼", la
 st.title("💼 디지털 자산 보고서")
 st.markdown("고인의 디지털 기록을 분석해 보험·구독·유언 정보를 자동 추출합니다.")
 
-""" 
 # Gemini 모델 로딩
 @st.cache_resource
 def load_gemini():
@@ -28,7 +27,7 @@ try:
 except ValueError as e:
     st.error(str(e))
     st.stop() 
-"""
+
 
 # =========================================================
 # 텍스트 입력
@@ -66,7 +65,7 @@ text_input = st.text_area(
 st.markdown("---")
 st.subheader("2️⃣ AI 분석")
 
-""" 
+
 if st.button("🚀 분석 시작", type="primary"):
     if not text_input.strip():
         st.warning("텍스트를 입력해주세요.")
@@ -117,5 +116,5 @@ if st.button("🚀 분석 시작", type="primary"):
         
         # 세션 저장
         st.session_state["last_report"] = result
- """
+
         
