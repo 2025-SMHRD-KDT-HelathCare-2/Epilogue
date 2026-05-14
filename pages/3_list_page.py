@@ -72,6 +72,7 @@ bot = load_chatbot()
 def format_guide_text(text: str) -> str:
     """
     LLM이 반환한 가이드 텍스트를 가독성 있는 HTML로 변환.
+    - 마크다운 볼드(**) / 이탤릭(*) → HTML 태그
     - 문장 종결부(. ! ?) 뒤에서 줄바꿈
     - '-', '·', 숫자.' 으로 시작하는 항목은 리스트로 변환
     - 빈 줄 기준 문단 분리
@@ -79,7 +80,9 @@ def format_guide_text(text: str) -> str:
     if not text:
         return ""
 
-    # 1) 줄 단위로 분리해서 리스트 항목 / 일반 문장 처리
+    # 전처리: '**1.\n신고 의무자**' 처럼 별표 안에 줄바꿈이 낀 경우 합치기
+    text = re.sub(r"\*\*(\d+\.)\s*\n\s*([^\n*]+)\*\*", r"**\1 \2**", text)
+
     lines = [ln.strip() for ln in text.split("\n")]
     html_parts = []
     in_ul = False
@@ -102,14 +105,19 @@ def format_guide_text(text: str) -> str:
             if in_ul:
                 html_parts.append("</ul>")
                 in_ul = False
-            # 문장 종결부 뒤에 <br> 삽입 (단, 숫자 사이의 점은 제외)
             sentence_split = re.sub(r"(?<=[.!?。])\s+(?=[가-힣A-Z])", "<br>", line)
             html_parts.append(f"<p>{sentence_split}</p>")
 
     if in_ul:
         html_parts.append("</ul>")
 
-    return f'<div class="guide-box">{"".join(html_parts)}</div>'
+    html = "".join(html_parts)
+
+    # 🔥 마크다운 → HTML 변환
+    html = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html)
+    html = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"<em>\1</em>", html)
+
+    return f'<div class="guide-box">{html}</div>'
 
 
 # 탭으로 두 기능 분리
