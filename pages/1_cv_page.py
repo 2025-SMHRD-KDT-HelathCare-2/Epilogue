@@ -6,12 +6,12 @@
 import streamlit as st
 import sys
 import os
-# from PIL import Image
+from PIL import Image
 
 # 상위 폴더의 modules를 import할 수 있도록 경로 추가
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# from modules.cv_module import YOLODetector, OCRReader, create_item_catalog
+from modules.cv_module import YOLODetector, OCRReader, create_item_catalog
 
 # =========================================================
 # 페이지 설정
@@ -23,15 +23,16 @@ st.markdown("유품 이미지를 업로드하면 AI가 자동으로 분류하고
 # =========================================================
 # 모델 로딩 (캐싱: 한 번만 로드해서 재사용)
 # =========================================================
-'''
+
 @st.cache_resource  # 이 데코레이터가 핵심!
+
 def load_models():
 
-     
+    ''' 
     [@st.cache_resource란?]
     모델 같은 무거운 객체를 한 번 로딩하면 메모리에 보관.
     페이지를 새로고침해도 다시 로딩 안 함 → 속도 ↑ 
-    
+    '''
     
     detector = YOLODetector("yolov8n.pt")
     ocr = OCRReader()
@@ -41,7 +42,7 @@ with st.spinner("AI 모델 로딩 중..."):
     detector, ocr = load_models()
 
 st.success("✅ 모델 준비 완료") 
-'''
+
 
 # =========================================================
 # 이미지 업로드
@@ -49,7 +50,7 @@ st.success("✅ 모델 준비 완료")
 st.markdown("---")
 st.subheader("1️⃣ 유품 이미지 업로드")
 
-'''
+
 uploaded_file = st.file_uploader(
     "이미지 파일을 선택하세요 (jpg, png)",
     type=["jpg", "jpeg", "png"]
@@ -76,7 +77,7 @@ if uploaded_file is not None:
         
         # 분석 실행 버튼
         if st.button("🚀 AI 분석 시작", type="primary"):
-            with st.spinner("분석 중... (10~20초 소요)"):
+            with st.spinner("분석 중... (20~30초 소요)"):
                 # CV 모듈 호출
                 result = create_item_catalog(temp_path, detector, ocr)
             
@@ -85,6 +86,7 @@ if uploaded_file is not None:
                 "귀중품": "💎", "추억물품": "📷", "가전": "📺",
                 "폐기물": "🗑️", "의료문서": "🏥"
             }
+            
             emoji = category_emoji.get(result["category"], "📦")
             st.markdown(f"### {emoji} 카테고리: **{result['category']}**")
             
@@ -114,4 +116,3 @@ if uploaded_file is not None:
 else:
     st.info("👆 위에서 이미지를 업로드하세요.")
 
-'''
