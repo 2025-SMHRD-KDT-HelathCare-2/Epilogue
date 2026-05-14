@@ -28,10 +28,10 @@ import os
 from google import genai
 from dotenv import load_dotenv
 
-from utils.list_preprocessing import load_guide
-
 load_dotenv()
 _client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # ─────────────────────────────────────────────
@@ -63,20 +63,13 @@ _CRISIS_RESPONSE = """
 # ─────────────────────────────────────────────
 
 def _build_system_prompt() -> str:
-    grief_guide = load_guide("grief") if os.path.exists(
-        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                     "data", "grief_guide.txt")
-    ) else ""
-
-    # grief_guide.txt가 data/ 폴더에 있는 경우를 위한 별도 로드
-    if not grief_guide:
-        grief_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "data", "grief_guide.txt"
-        )
-        if os.path.exists(grief_path):
-            with open(grief_path, encoding="utf-8") as f:
-                grief_guide = f.read()
+    grief_path = os.path.join(
+        BASE_DIR, "data", "processed", "grief_care", "grief_guide.txt"
+    )
+    grief_guide = ""
+    if os.path.exists(grief_path):
+        with open(grief_path, encoding="utf-8") as f:
+            grief_guide = f.read()
 
     system = f"""
 당신은 사랑하는 사람을 잃은 유족을 위한 심리 케어 챗봇입니다.
@@ -194,9 +187,8 @@ class GriefChatbot:
                 "history":   updated_history,
             }
 
-        # 일반 대화: Gemini 호출 (시스템 프롬프트 + 대화 기록 + 현재 메시지 조합)
+        # 일반 대화: Gemini 호출
         try:
-            # 전체 대화 내용을 하나의 프롬프트로 조합
             conversation = f"{self._system_prompt}\n\n"
             for turn in history:
                 role  = "사용자" if turn["role"] == "user" else "상담사"
