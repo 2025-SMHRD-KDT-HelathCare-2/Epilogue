@@ -25,12 +25,13 @@ import re
 # ─────────────────────────────────────────────
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
+DATA_DIR = os.path.join(BASE_DIR, "data", "processed")
 
 GUIDE_FILES = {
-    "disposal":    os.path.join(DATA_DIR, "disposal_guide.txt"),    # 귀중품·추억물품·가전·폐기물·서류 처리
-    "account":     os.path.join(DATA_DIR, "account_guide.txt"),     # 디지털 계정·구독 해지
-    "inheritance": os.path.join(DATA_DIR, "inheritance_guide.txt"), # 사망신고·안심상속·보험·금융
+    "disposal":    os.path.join(DATA_DIR, "admin", "disposal_guide.txt"),    # 귀중품·추억물품·가전·폐기물·서류 처리
+    "account":     os.path.join(DATA_DIR, "admin", "account_guide.txt"),     # 디지털 계정·구독 해지
+    "inheritance": os.path.join(DATA_DIR, "admin", "inheritance_guide.txt"), # 사망신고·안심상속·보험·금융
+    "grief":       os.path.join(DATA_DIR, "grief_care", "grief_guide.txt"),  # 애도 상담 가이드 (chatbot_module.py에서 사용)
 }
 
 
