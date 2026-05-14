@@ -9,12 +9,26 @@ import json
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from modules.llm_module import analyze_subscriptions, analyze_insurance, analyze_medical, analyze_card
-from utils.llm_preprocessing import clean_text, mask_personal_info
+from modules.llm_module import GeminiAnalyzer
+from utils.llm_preprocessing import mask_personal_info, clean_text
 
 st.set_page_config(page_title="디지털 자산 보고서", page_icon="💼", layout="wide")
 st.title("💼 디지털 자산 보고서")
-st.markdown("고인의 디지털 기록을 분석해 보험·구독·의료·카드 정보를 자동 추출합니다.")
+st.markdown("고인의 디지털 기록을 분석해 보험·구독·유언 정보를 자동 추출합니다.")
+
+
+# Gemini 모델 로딩
+@st.cache_resource
+def load_gemini():
+    return GeminiAnalyzer()
+
+try:
+    gemini = load_gemini()
+    st.success("✅ Gemini 2.5 flash 준비 완료")
+except ValueError as e:
+    st.error(str(e))
+    st.stop() 
+
 
 # =========================================================
 # 텍스트 입력
@@ -180,4 +194,6 @@ if st.button("🚀 분석 시작", type="primary"):
             st.json(results)
 
         # 세션 저장
-        st.session_state["last_report"] = results
+        st.session_state["last_report"] = result
+ 
+        
