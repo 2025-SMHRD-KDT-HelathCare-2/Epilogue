@@ -2,22 +2,16 @@ import os
 import json
 from pathlib import Path
 from dotenv import load_dotenv
-from groq import Groq
-
-# 환경변수 로드
+import google.generativeai as genai
 load_dotenv()
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-MODEL = "llama-3.3-70b-versatile"
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 # ── 내부 유틸 ─────────────────────────────────────────────
 def _chat(prompt: str) -> str:
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2,
-    )
-    return response.choices[0].message.content
+    response = model.generate_content(prompt)
+    return response.text
 
 
 def _parse_json(text: str) -> dict:
@@ -30,7 +24,7 @@ def _parse_json(text: str) -> dict:
         return json.loads(text.strip())
     except json.JSONDecodeError as e:
         print(f"[경고] JSON 파싱 실패: {e}")
-        return {"raw_response": text, "error": str(e)}
+        return {"error": str(e), "raw_response": text}
 
 
 # ── 1. 구독 서비스 분석 ───────────────────────────────────
@@ -57,7 +51,10 @@ JSON만 반환하고 다른 텍스트는 쓰지 마세요.
   "총_구독수": 0
 }}
 """
-    return _parse_json(_chat(prompt))
+    result = _parse_json(_chat(prompt))
+    if result is None:
+        return {"error": "분석 실패", "미해지_구독_목록": [], "예상_월간_지출": 0, "총_구독수": 0}
+    return result
 
 
 # ── 2. 보험 분석 ──────────────────────────────────────────
@@ -86,7 +83,10 @@ JSON만 반환하고 다른 텍스트는 쓰지 마세요.
   "청구가능_보험수": 0
 }}
 """
-    return _parse_json(_chat(prompt))
+    result = _parse_json(_chat(prompt))
+    if result is None:
+        return {"error": "분석 실패", "보험_목록": [], "총_보험수": 0, "청구가능_보험수": 0}
+    return result
 
 
 # ── 3. 의료 기록 분석 ─────────────────────────────────────
@@ -108,11 +108,14 @@ JSON만 반환하고 다른 텍스트는 쓰지 마세요.
       "복용시간": "오전 8시"
     }}
   ],
-  "주요_진단": ["고혈압", "당뇨"],
-  "담당_병원": ["서울아산병원", "우리동네내과"]
+  "주요_진단": ["고혈압"],
+  "담당_병원": ["서울아산병원"]
 }}
 """
-    return _parse_json(_chat(prompt))
+    result = _parse_json(_chat(prompt))
+    if result is None:
+        return {"error": "분석 실패", "복약_목록": [], "주요_진단": [], "담당_병원": []}
+    return result
 
 
 # ── 4. 카드 결제 분석 ─────────────────────────────────────
@@ -143,7 +146,10 @@ JSON만 반환하고 다른 텍스트는 쓰지 마세요.
   "총_지출": 0
 }}
 """
-    return _parse_json(_chat(prompt))
+    result = _parse_json(_chat(prompt))
+    if result is None:
+        return {"error": "분석 실패", "의료비_내역": [], "카테고리별_지출": {}, "총_지출": 0}
+    return result
 
 
 # ── 5. 종합 보고서 생성 ───────────────────────────────────
@@ -168,17 +174,6 @@ def generate_report(all_results: dict) -> str:
 
 # ── 6. 전체 파이프라인 ────────────────────────────────────
 def run_llm_pipeline(preprocessed_data: dict) -> dict:
-    """
-    전처리된 데이터를 받아 전체 LLM 분석을 수행합니다.
-
-    사용법:
-        from utils.preprocessing import preprocess_all
-        from modules.llm_module import run_llm_pipeline
-
-        data = preprocess_all()
-        result = run_llm_pipeline(data)
-        print(result["report"])
-    """
     llm_input = preprocessed_data.get("llm_input", {})
     results = {}
 
@@ -211,7 +206,7 @@ def run_llm_pipeline(preprocessed_data: dict) -> dict:
 if __name__ == "__main__":
     import sys
     sys.path.append(str(Path(__file__).resolve().parent.parent))
-    from utils.preprocessing import preprocess_all
+    from utils.llm_preprocessing import preprocess_all
 
     data = preprocess_all()
     result = run_llm_pipeline(data)
