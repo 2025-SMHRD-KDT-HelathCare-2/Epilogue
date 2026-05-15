@@ -230,6 +230,8 @@ data/raw/
 data/processed/
 models/*.pt
 models/*.pth
+data/cv_model
+data/dataset.zip
 
 # Jupyter
 .ipynb_checkpoints/
