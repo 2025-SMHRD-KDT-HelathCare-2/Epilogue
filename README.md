@@ -11,9 +11,9 @@ YOLO와 Gemini 2.5 flash를 활용한 유품 및 디지털 유산 통합 정리
 ## 팀원 & 역할 담당
 주양덕 : PM, UI, 발표
   - app.py
-  - pages/1_유품_카탈로그.py
-  - pages/2_디지털_자산_보고서.py
-  - pages/3_통합_체크리스트.py
+  - pages/1_cv_page.py
+  - pages/2_llm_page.py
+  - pages/3_list_page.py
 
 문정인 : CV 담당
   - modules/cv_module.py

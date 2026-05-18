@@ -180,4 +180,5 @@ if st.button("🚀 분석 시작", type="primary"):
             st.json(results)
 
         # 세션 저장
-        st.session_state["last_report"] = results
+        st.session_state["llm_result"] = results  # 페이지 3 연동용
+        st.session_state["last_report"] = results # 구버전 호환

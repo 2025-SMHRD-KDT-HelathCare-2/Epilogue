@@ -13,3 +13,5 @@ matplotlib
 seaborn
 python-dotenv
 pydantic
+tensorflow
+reportlab
