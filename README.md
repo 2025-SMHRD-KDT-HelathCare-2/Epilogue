@@ -1,5 +1,5 @@
 ## Epilogue
-YOLO와 Gemini 2.5 flash를 활용한 유품 및 디지털 유산 통합 정리
+Tensorflow와 Gemini 2.5 flash를 활용한 유품 및 디지털 유산 통합 정리
 
 
 ## 🕊️ 유품 및 디지털 유산 통합 정리 솔루션
@@ -19,19 +19,20 @@ YOLO와 Gemini 2.5 flash를 활용한 유품 및 디지털 유산 통합 정리
   - modules/cv_module.py
   - notebooks/cv_modeling
   - utils/cv_preprocessing.py
-  - data/
+  - 
 
 김동건 : LLM 담당
   - modules/llm_module.py
   - notebooks/llm_modeling
   - utils/llm_preprocessing.py
-  - data/
+  - 
 
 신예은 : List/성능 향상, 비교분석 시각화 담당
   - modules/list_module.py
+  - modules/cv_module.py 
   - notebooks/모델 업그레이드 및 비교분석, 그래프 작업
   - utils/list_processing.py
-  - data/
+  - 
 
 
 ## 실행 방법
