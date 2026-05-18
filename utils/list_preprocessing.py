@@ -166,11 +166,12 @@ def extract_sections_for_category(category: str, guides: dict, items: list = Non
 # }
 
 PHYSICAL_CATEGORY_MAP = {
-    "귀중품":   ["반지", "귀금속", "시계", "현금", "통장", "도장", "인감증명서", "스마트폰", "금", "은"],
-    "추억물품": ["사진", "앨범", "편지", "기념품", "액자"],
-    "가전":     ["냉장고", "세탁기", "TV", "김치냉장고", "전자제품", "에어컨", "전자레인지", "텔레비전"],
-    "폐기물":   ["쓰레기", "폐기물", "생활용품", "의류", "옷", "이불", "침구"],
-    "서류":     ["신분증", "주민등록증", "보험증권", "유언장", "부동산", "자동차등록증", "진단서", "서류", "문서"],
+    "귀중품":   ["gold", "ring", "bankbook"],
+    "추억물품": ["photo", "album"],
+    "가전":     ["TV", "laptop", "fridge", "air_conditioning"],
+    "폐기물":   ["glass_bottle", "pet_bottle", "styrofoam"],
+    "서류":     ["paper_document", "paper"],
+    "가구":     ["bed", "chair", "desk", "dining_table", "drawer", "nightstand", "sofa", "storage_cabinet", "vanity", "wardrobe"],
 }
 
 
