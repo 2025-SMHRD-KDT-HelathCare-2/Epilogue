@@ -66,7 +66,7 @@ with feature_col1:
     st.info("""
     **📦 스마트 유품 카탈로그**
     
-    YOLO + OCR로 유품을 
+    Tensorflow + OCR로 유품을 
     자동 분류하고 명세서를 
     생성합니다.
     """)
